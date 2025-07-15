@@ -14,3 +14,4 @@ print("Enrolled:", is_enrolled)
 
 # New line added to test GitHub Actions trigger
 print("✅ This file was updated and pushed.")
+print("checking automation")
