@@ -12,23 +12,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up SSH private key
+      # Step 2: Set up SSH key from GitHub Secrets
+      - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/githubactions
-          chmod 600 ~/.ssh/githubactions
+          chmod 600 ~/.ssh/githubactions  # Ensure the key has proper permissions
 
+      # Step 3: Add EC2 instance to known hosts to prevent SSH authenticity warnings
       - name: Add EC2 to known hosts
         run: |
           ssh-keyscan -H 13.60.65.219 >> ~/.ssh/known_hosts
 
+      # Step 4: Debug the SSH connection with verbose output (this will help identify issues)
+      - name: Test SSH connection with verbose output
+        run: |
+          ssh -vvv -i ~/.ssh/githubactions ec2-user@13.60.65.219 "mkdir -p /home/ec2-user/app"
+
+      # Step 5: Ensure target directory exists on EC2
       - name: Ensure target directory exists on EC2
         run: |
           ssh -i ~/.ssh/githubactions ec2-user@13.60.65.219 "mkdir -p /home/ec2-user/app"
 
+      # Step 6: Copy python.py to the EC2 instance's target directory
       - name: Copy python.py to EC2
         run: |
           scp -i ~/.ssh/githubactions python.py ec2-user@13.60.65.219:/home/ec2-user/app/
+
