@@ -1,0 +1,34 @@
+name: Auto-Copy python.py to EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - python.py  # Only trigger if python.py is modified
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH private key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/githubactions
+          chmod 600 ~/.ssh/githubactions
+
+      - name: Add EC2 to known hosts
+        run: |
+          ssh-keyscan -H 13.60.65.219 >> ~/.ssh/known_hosts
+
+      - name: Ensure target directory exists on EC2
+        run: |
+          ssh -i ~/.ssh/githubactions ec2-user@13.60.65.219 "mkdir -p /home/ec2-user/app"
+
+      - name: Copy python.py to EC2
+        run: |
+          scp -i ~/.ssh/githubactions python.py ec2-user@13.60.65.219:/home/ec2-user/app/
